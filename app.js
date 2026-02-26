@@ -22,6 +22,7 @@ var App = (() => {
         UI.renderWatchlist(watchlist, selectedSymbol, onSelectSymbol);
         UI.updateMarketStatus(DataModule.isDemo());
         UI.renderJournal(journalEntries);
+        UI.renderJournalSummary(journalEntries, watchlistData);
         loadSettings();
         await refreshAll();
         UI.updateJournalLivePrices(journalEntries, watchlistData);
@@ -39,6 +40,7 @@ var App = (() => {
         UI.renderWatchlistPrices(watchlistData, selectedSymbol, onSelectSymbol);
         await renderSelected();
         UI.updateJournalLivePrices(journalEntries, watchlistData);
+        UI.renderJournalSummary(journalEntries, watchlistData);
         UI.setLoading(false);
     }
 
@@ -194,6 +196,7 @@ var App = (() => {
                 UI.updateSelectedPrice(price);
             }
             UI.updateJournalLivePrices(journalEntries, watchlistData);
+            UI.renderJournalSummary(journalEntries, watchlistData);
         });
     }
 
@@ -281,6 +284,7 @@ var App = (() => {
         journalEntries.unshift(entry);
         localStorage.setItem('journal', JSON.stringify(journalEntries));
         UI.renderJournal(journalEntries);
+        UI.renderJournalSummary(journalEntries, watchlistData);
         UI.updateJournalLivePrices(journalEntries, watchlistData);
         UI.showToast(`📓 Trade ${entry.direction} ${entry.symbol} registrato`);
     }
@@ -296,6 +300,7 @@ var App = (() => {
         entry.closedAt = new Date().toLocaleString('it-IT');
         localStorage.setItem('journal', JSON.stringify(journalEntries));
         UI.renderJournal(journalEntries);
+        UI.renderJournalSummary(journalEntries, watchlistData);
     }
 
     // Expose to window for button onclick handlers

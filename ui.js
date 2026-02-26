@@ -286,6 +286,62 @@ var UI = (() => {
   }
 
   // ── Journal ───────────────────────────────────────────────
+  function renderJournalSummary(entries, watchData) {
+    const summaryContainer = document.getElementById('journalSummary');
+    if (!summaryContainer) return;
+
+    let totalInvested = 0;
+    let realizedPnl = 0;
+    let livePnl = 0;
+
+    entries.forEach(e => {
+      if (e.status === 'closed') {
+        realizedPnl += (e.pnlUsd || 0);
+      } else if (e.status === 'open') {
+        const invested = e.entryPrice * e.shares;
+        totalInvested += invested;
+
+        const stock = watchData && watchData[e.symbol];
+        let currentPrice = null;
+        if (stock && stock.livePrice) currentPrice = stock.livePrice;
+        else if (stock && stock.quote) currentPrice = stock.quote.price;
+
+        if (currentPrice && !isNaN(currentPrice)) {
+          const pnl = e.direction === 'BUY'
+            ? (currentPrice - e.entryPrice) * e.shares
+            : (e.entryPrice - currentPrice) * e.shares;
+          livePnl += pnl;
+        }
+      }
+    });
+
+    const formatMoney = (val) => {
+      const sign = val >= 0 ? '+' : '';
+      return `<span class="${val >= 0 ? 'pos' : 'neg'}" style="color:var(--${val >= 0 ? 'green' : 'red'})">${sign}$${Math.abs(val).toFixed(2)}</span>`;
+    };
+
+    if (entries.length === 0) {
+      summaryContainer.innerHTML = '';
+      return;
+    }
+
+    summaryContainer.innerHTML = `
+      <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; font-size:0.75rem; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+        <div>
+          <div style="color:var(--text-muted);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.05em">Capitale Investito</div>
+          <div style="font-weight:700">$${totalInvested.toFixed(2)}</div>
+        </div>
+        <div>
+          <div style="color:var(--text-muted);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.05em">P&L Realizzato</div>
+          <div style="font-weight:700">${formatMoney(realizedPnl)}</div>
+        </div>
+        <div style="grid-column:1/-1; padding-top:6px; border-top:1px solid rgba(255,255,255,0.05)">
+          <div style="color:var(--text-muted);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.05em">P&L Non Realizzato (Live)</div>
+          <div style="font-weight:700; font-size:0.9rem">${formatMoney(livePnl)}</div>
+        </div>
+      </div>
+    `;
+  }
   function renderJournal(entries) {
     const container = document.getElementById('journalContainer');
     if (!container) return;
@@ -470,7 +526,7 @@ var UI = (() => {
     updateMarketStatus, renderWatchlist, renderWatchlistPrices,
     highlightSelected, updateLivePrice, updateSelectedPrice, updateStockHeader,
     renderSignal, renderIndicatorBadges, renderRiskPanel,
-    renderNews, renderJournal, updateJournalLivePrices, showToast, showExitAlert,
+    renderNews, renderJournal, renderJournalSummary, updateJournalLivePrices, showToast, showExitAlert,
     setLoading, openAddTradeModal, confirmAddTrade, promptCloseEntry,
   };
 })();
