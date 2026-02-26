@@ -168,6 +168,10 @@ var App = (() => {
                         bodyColor: '#94a3b8',
                         borderColor: 'rgba(99,102,241,0.4)',
                         borderWidth: 1,
+                        padding: window.innerWidth < 600 ? 6 : 10,
+                        titleFont: { size: window.innerWidth < 600 ? 11 : 13 },
+                        bodyFont: { size: window.innerWidth < 600 ? 10 : 12 },
+                        boxPadding: window.innerWidth < 600 ? 3 : 6,
                     },
                 },
                 scales: {
