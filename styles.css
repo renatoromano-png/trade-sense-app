@@ -1061,19 +1061,37 @@ body {
 @media (max-width: 860px) {
   .layout {
     grid-template-columns: 1fr;
-    grid-template-rows: auto;
+    grid-template-rows: auto auto auto;
     height: auto;
-    overflow: visible;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .sidebar {
-    max-height: 200px;
+    max-height: max-content;
     border-right: none;
     border-bottom: 1px solid var(--border);
     display: flex;
     flex-direction: row;
     overflow-x: auto;
-    gap: 6px;
+    overflow-y: hidden;
+    gap: 8px;
+    padding: 12px;
+    white-space: nowrap;
+    /* Hide scrollbar for cleaner look but keep functionality */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .watchlist-item {
+    flex: 0 0 auto;
+    /* Don't shrink, allow horizontal scroll */
+    width: 200px;
+    margin-bottom: 0;
   }
 
   .right-panel {
@@ -1083,6 +1101,75 @@ body {
 
   .sidebar-title {
     display: none;
+  }
+
+  .app-header {
+    padding: 12px 16px;
+  }
+}
+
+@media (max-width: 600px) {
+  .stock-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .stock-primary {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .stock-meta {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .header-title h1 {
+    font-size: 1.2rem;
+  }
+
+  .market-status {
+    padding: 4px 8px;
+    font-size: 0.65rem;
+  }
+
+  .demo-badge {
+    padding: 4px 8px;
+    font-size: 0.65rem;
+  }
+
+  .signal-grid,
+  .metric-grid,
+  .risk-grid,
+  .settings-grid {
+    grid-template-columns: 1fr;
+    /* Stack everything on mobile */
+  }
+
+  .risk-card,
+  .settings-card,
+  .journal-card {
+    padding: 16px;
+  }
+
+  .chart-container {
+    height: 300px;
+    /* Make chart shorter on mobile */
+  }
+
+  /* Fix sticky header so it doesn't overlap on scroll */
+  .center-panel {
+    overflow-y: visible;
+  }
+
+  body {
+    overflow-y: auto;
+  }
+
+  #appShell {
+    height: auto;
+    min-height: 100vh;
   }
 }
 
