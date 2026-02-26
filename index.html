@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="Dashboard professionale per il trading azionario NYSE e Nasdaq con segnali in tempo reale, gestione del rischio e indicatori tecnici">
+  <title>TradeSense – Segnali NYSE &amp; Nasdaq</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js via CDN -->
+  <script src="chart.min.js"></script>
+</head>
+
+<body>
+
+  <!-- ── Login Screen ─────────────────────────────────── -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <div class="login-logo">📈</div>
+      <h1 class="login-title">TradeSense</h1>
+      <p class="login-sub">NYSE &amp; Nasdaq Signal Dashboard</p>
+
+      <!-- First-run: set password -->
+      <div id="setupPanel" style="display:none">
+        <p class="login-hint">Prima apertura – imposta la tua password personale:</p>
+        <input class="login-input" type="password" id="setupPwd1" placeholder="Nuova password"
+          autocomplete="new-password">
+        <input class="login-input" type="password" id="setupPwd2" placeholder="Conferma password"
+          autocomplete="new-password">
+        <button class="login-btn" onclick="Auth.setupPassword()">Crea account</button>
+      </div>
+
+      <!-- Returning: enter password -->
+      <div id="loginPanel" style="display:none">
+        <p class="login-hint">Inserisci la tua password per accedere:</p>
+        <input class="login-input" type="password" id="loginPwd" placeholder="Password" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter') Auth.login()">
+        <button class="login-btn" onclick="Auth.login()">Accedi</button>
+        <div class="login-error" id="loginError"></div>
+        <p class="login-forgot" onclick="Auth.resetPrompt()">Password dimenticata? Reset</p>
+      </div>
+
+      <p class="login-footer">Dati locali · Nessuna registrazione richiesta</p>
+    </div>
+  </div>
+
+  <!-- Main app – hidden until authenticated -->
+  <div id="appShell" style="display:none;height:100vh;display:none;flex-direction:column">
+
+    <!-- ── Loading Overlay ───────────────────────────────── -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- ── Header ────────────────────────────────────────── -->
+    <header class="header">
+      <div class="header-brand">
+        <div class="header-logo">📈</div>
+        <div>
+          <div class="header-title">TradeSense</div>
+          <div class="header-sub">Segnali NYSE &amp; Nasdaq · Fineco X Assistant</div>
+        </div>
+      </div>
+      <div class="header-meta">
+        <div class="demo-badge" id="demoBadge">⚡ DEMO MODE</div>
+        <div class="market-status closed" id="marketStatus">Caricamento…</div>
+        <div id="sessionLabel" style="font-size:0.72rem;color:var(--text-muted)"></div>
+      </div>
+    </header>
+
+    <!-- ── Main Layout ────────────────────────────────────── -->
+    <div class="layout">
+
+      <!-- ── LEFT: Watchlist ────────────────────────────── -->
+      <aside class="sidebar">
+        <div class="sidebar-title">Watchlist</div>
+        <div id="watchlistContainer"></div>
+      </aside>
+
+      <!-- ── CENTER: Main Panel ─────────────────────────── -->
+      <main class="main-panel">
+
+        <!-- Stock Header -->
+        <div class="stock-header">
+          <div>
+            <div class="stock-title">
+              <span class="stock-symbol" id="stockSymbolDisplay">–</span>
+              <span class="stock-name" id="stockNameDisplay"></span>
+            </div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">
+              Timeframe: M15 · Aggiornamento: ogni 60s
+            </div>
+          </div>
+          <div class="stock-price-block">
+            <div class="stock-price-live" id="livePriceDisplay">–</div>
+            <div class="stock-change" id="stockChangeDisplay">–</div>
+          </div>
+        </div>
+
+        <!-- Signal Card -->
+        <div class="signal-card wait" id="signalCard">
+          <div class="signal-top">
+            <div id="signalBadge" class="signal-badge wait">
+              <span class="signal-pulse"></span>◆ ATTENDI
+            </div>
+            <div id="confidenceRing" class="confidence-ring wait-ring">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle class="ring-track" cx="36" cy="36" r="28" />
+                <circle class="ring-fill" cx="36" cy="36" r="28" stroke-dasharray="175.9" stroke-dashoffset="175.9" />
+              </svg>
+              <div class="confidence-pct">0%</div>
+            </div>
+          </div>
+          <div class="score-bar">
+            <div class="score-bar-bull" id="scoreBarBull" style="width:50%"></div>
+            <div class="score-bar-bear" id="scoreBarBear" style="width:50%"></div>
+          </div>
+          <div style="margin-top:14px">
+            <div
+              style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:8px">
+              Fattori di segnale
+            </div>
+            <div id="signalReasons" class="signal-reasons">
+              <div class="signal-reason">Caricamento dati in corso…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Indicator Badges Row -->
+        <div class="indicators-row" id="indicatorsRow">
+          <!-- populated by ui.js -->
+        </div>
+
+        <!-- Chart Card -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <span class="chart-title">Grafico Prezzi – EMA 9 · EMA 21 · Bollinger Bands</span>
+            <div class="chart-tabs">
+              <button class="chart-tab active" onclick="switchChartTF('15',this)">M15</button>
+              <button class="chart-tab" onclick="switchChartTF('60',this)">H1</button>
+              <button class="chart-tab" onclick="switchChartTF('D',this)">D1</button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="priceChart"></canvas>
+          </div>
+        </div>
+
+        <!-- News Card -->
+        <div class="news-card">
+          <div class="card-title">📰 Notizie recenti</div>
+          <div id="newsContainer">
+            <div style="color:var(--text-muted);font-size:0.75rem">Caricamento…</div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- ── RIGHT: Risk & Settings Panel ───────────────── -->
+      <aside class="right-panel">
+
+        <!-- Risk Card -->
+        <div class="risk-card">
+          <div class="card-title">⚖️ Gestione Rischio</div>
+          <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;margin-bottom:2px">
+            Ordini da eseguire manualmente su Fineco X
+          </div>
+          <div id="riskPanel">
+            <div style="color:var(--text-muted);font-size:0.75rem;text-align:center;padding:12px 0">
+              Seleziona un titolo per vedere l'analisi del rischio
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Card -->
+        <div class="settings-card">
+          <div class="card-title">⚙️ Impostazioni</div>
+          <div class="settings-grid">
+            <div class="form-group">
+              <label class="form-label">Capitale (€)</label>
+              <input class="form-input" type="number" id="capitalInput" placeholder="10000" min="100" step="100">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Rischio %</label>
+              <input class="form-input" type="number" id="riskPctInput" placeholder="1.5" min="0.1" max="5" step="0.1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">R:R minimo</label>
+              <input class="form-input" type="number" id="rrRatioInput" placeholder="2.0" min="1" max="5" step="0.1">
+            </div>
+            <div class="form-group" style="justify-content:flex-end">
+              <label class="form-label">&nbsp;</label>
+              <button class="btn-primary" style="grid-column:auto" onclick="App.saveSettings()">Salva</button>
+            </div>
+            <div class="form-group full">
+              <label class="form-label">🔑 Finnhub API Key</label>
+              <input class="form-input" type="text" id="apiKeyInput" placeholder="Incolla qui la tua API key">
+            </div>
+            <div class="api-hint full">
+              API key gratuita su <a href="https://finnhub.io/register" target="_blank">finnhub.io/register</a><br>
+              Senza key: modalità DEMO con dati simulati
+            </div>
+            <button class="btn-primary" onclick="App.saveSettings()">✓ Applica Impostazioni</button>
+            <button class="btn-add-trade" onclick="App.resetWatchlist()">↺ Ripristina Azioni di Default</button>
+          </div>
+        </div>
+
+        <!-- Journal Card -->
+        <div class="journal-card">
+          <div class="card-title">📓 Diario Operazioni</div>
+          <div id="journalContainer"></div>
+          <button class="btn-add-trade" onclick="UI.openAddTradeModal()">+ Registra operazione manuale</button>
+        </div>
+
+      </aside>
+    </div>
+  </div><!-- /appShell -->
+
+  <!-- ── Scripts (order matters!) ────────────────────── -->
+  <script src="data.js"></script>
+  <script src="indicators.js"></script>
+  <script src="signals.js"></script>
+  <script src="risk.js"></script>
+  <script src="ui.js"></script>
+  <script src="app.js"></script>
+
+  <script>
+    // ── Chart timeframe switcher ───────────────────────
+    async function switchChartTF(tf, btn) {
+      document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const data = App.getSelectedData();
+      const sym = App.getSelectedSymbol();
+      if (!sym) return;
+      UI.setLoading(true);
+      const candles = await DataModule.fetchCandles(sym, tf === 'D' ? 'D' : tf, 150);
+      if (candles && candles.length > 10) {
+        const ind = Indicators.computeAll(candles);
+        // Re-render chart with new TF
+        const chartFn = App._renderChart || null; // fallback
+        // Trigger re-render via app
+        App._currentCandles = candles;
+        App._currentInd = ind;
+        window._tempChart && window._tempChart(candles, ind);
+      }
+      UI.setLoading(false);
+    }
+
+    function updateStockHeader(symbol, quote) {
+      // Logic moved to ui.js / app.js
+    }
+
+
+    // ── Auth module ────────────────────────────────────
+    window.Auth = (() => {
+      const KEY_HASH = 'ts_auth_hash';
+      const KEY_SESSION = 'ts_session';
+      const SESSION_HOURS = 12;
+
+      // Very simple hash (djb2) – sufficient for local personal use
+      function hashStr(s) {
+        let h = 5381;
+        for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
+        return (h >>> 0).toString(36);
+      }
+
+      function hasPassword() { return !!localStorage.getItem(KEY_HASH); }
+
+      function isSessionValid() {
+        const s = JSON.parse(localStorage.getItem(KEY_SESSION) || 'null');
+        return s && (Date.now() - s.ts) < SESSION_HOURS * 3600000;
+      }
+
+      function startSession() {
+        localStorage.setItem(KEY_SESSION, JSON.stringify({ ts: Date.now() }));
+      }
+
+      function showLoginScreen() {
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('appShell').style.display = 'none';
+        if (hasPassword()) {
+          document.getElementById('loginPanel').style.display = 'block';
+          document.getElementById('setupPanel').style.display = 'none';
+          setTimeout(() => document.getElementById('loginPwd')?.focus(), 100);
+        } else {
+          document.getElementById('setupPanel').style.display = 'block';
+          document.getElementById('loginPanel').style.display = 'none';
+          setTimeout(() => document.getElementById('setupPwd1')?.focus(), 100);
+        }
+      }
+
+      function unlockApp() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appShell').style.display = 'flex';
+        document.getElementById('appShell').style.flexDirection = 'column';
+        if (!window._appStarted) {
+          window._appStarted = true;
+          App.init().then(() => {
+            // Initialization completes here
+          });
+        }
+      }
+
+      function setupPassword() {
+        const p1 = document.getElementById('setupPwd1').value;
+        const p2 = document.getElementById('setupPwd2').value;
+        if (p1.length < 4) { alert('Password troppo corta (min 4 caratteri)'); return; }
+        if (p1 !== p2) { alert('Le password non corrispondono'); return; }
+        localStorage.setItem(KEY_HASH, hashStr(p1));
+        startSession();
+        unlockApp();
+      }
+
+      function login() {
+        const pwd = document.getElementById('loginPwd').value;
+        const errEl = document.getElementById('loginError');
+        if (hashStr(pwd) === localStorage.getItem(KEY_HASH)) {
+          errEl.textContent = '';
+          startSession();
+          unlockApp();
+        } else {
+          errEl.textContent = '❌ Password errata';
+          document.getElementById('loginPwd').value = '';
+          document.getElementById('loginPwd').focus();
+        }
+      }
+
+      function resetPrompt() {
+        if (confirm('Vuoi eliminare la password e ricominciare? I dati del diario verranno mantenuti.')) {
+          localStorage.removeItem(KEY_HASH);
+          localStorage.removeItem(KEY_SESSION);
+          location.reload();
+        }
+      }
+
+      function init() {
+        if (isSessionValid()) { unlockApp(); }
+        else { showLoginScreen(); }
+      }
+
+      return { init, login, setupPassword, resetPrompt };
+    })();
+
+    // Boot – DOM is already ready here (scripts are at bottom of body)
+    Auth.init();
+  </script>
+</body>
+
+</html>
