@@ -321,8 +321,15 @@ var UI = (() => {
   function openAddTradeModal() {
     const data = window.App?.getSelectedData();
     const sym = window.App?.getSelectedSymbol() || '';
-    if (!data?.analysis) return;
-    const a = data.analysis;
+
+    // Provide fallback if analysis is null (e.g., WAIT signal)
+    const a = data?.analysis || {
+      direction: 'BUY',
+      entryPrice: data?.quote?.price || 0,
+      slPrice: (data?.quote?.price || 0) * 0.98,
+      tpPrice: (data?.quote?.price || 0) * 1.04,
+      shares: 10
+    };
 
     const modal = document.createElement('div');
     modal.id = 'tradeModal';
