@@ -374,6 +374,49 @@ var UI = (() => {
   }
 
   // ── Modals & Toasts ────────────────────────────────────────
+
+  function openFAQModal() {
+    const modal = document.createElement('div');
+    modal.id = 'faqModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(6,12,26,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)';
+    modal.innerHTML = `
+      <div class="faq-modal-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <h2 class="faq-modal-title">❔ How To / FAQ</h2>
+          <button onclick="document.getElementById('faqModal').remove()" style="background:none;border:none;color:var(--text-muted);font-size:1.5rem;cursor:pointer;padding:0;line-height:1;">✕</button>
+        </div>
+        
+        <div style="display:flex;flex-direction:column;gap:16px;color:var(--text-secondary);font-size:0.9rem;line-height:1.5;">
+          
+          <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:var(--radius-md);border:1px solid var(--border);">
+            <strong style="color:var(--cyan);font-size:1rem;display:block;margin-bottom:6px;">1. Il box "Gestione Rischio": A cosa serve?</strong>
+            Il box agisce come un <strong>Calcolatore Pre-Trade</strong> per valutare <em>nuove</em> operazioni suggerite dai segnali della Dashboard.<br>
+            Non monitora il tuo portafoglio attuale, ma ti dice in anteprima: <em>"Se decidessi di comprare/vendere ORA basandoti su questo segnale, quante azioni dovresti prendere e a che livello di prezzo impostare lo Stop Loss e Take Profit in base alle tue regole?".</em>
+          </div>
+
+          <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:var(--radius-md);border:1px solid var(--border);">
+            <strong style="color:var(--cyan);font-size:1rem;display:block;margin-bottom:6px;">2. E le mie operazioni reali in portafoglio?</strong>
+            Per monitorare un'operazione esistente, devi registrarla manualmente cliccando su <strong>"+ Registra operazione manuale"</strong> (sotto al Portafoglio/Diario), indicando il prezzo d'ingresso reale e la quantità.<br>
+            L'app monitorerà quell'azione e se i suoi indicatori indicheranno che il trend è esaurito, l'app genererà un <strong>Alert visivo di Uscita</strong> dedicato per dirti di chiuderla.
+          </div>
+
+          <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:var(--radius-md);border:1px solid var(--border);">
+            <strong style="color:var(--cyan);font-size:1rem;display:block;margin-bottom:6px;">3. L'app fa trading da sola?</strong>
+            No. L'applicazione è una <em>Dashboard di Assistenza</em>. Calcola gli ingressi e le uscite ideali. Quando ottieni un segnale di acquisto o di vendita (Loss/Profit), devi eseguire tu materialmente l'operazione sul tuo vero broker (es. Fineco X).
+          </div>
+
+          <div style="background:rgba(255,255,255,0.03);padding:16px;border-radius:var(--radius-md);border:1px solid var(--border);">
+            <strong style="color:var(--cyan);font-size:1rem;display:block;margin-bottom:6px;">4. Come leggo un segnale?</strong>
+            Se vedi 🟢 COMPRA o 🔴 VENDI nel box segnali, leggi le azioni consigliate nel box Rischio, vai sul broker e apri la posizione inserendo Take Profit e Stop Loss suggeriti. Poi torna qui e registra il trade in portafoglio per monitorarlo.
+          </div>
+
+        </div>
+        
+        <button onclick="document.getElementById('faqModal').remove()" style="width:100%;margin-top:24px;padding:12px;background:linear-gradient(135deg,var(--accent),#818cf8);border:none;border-radius:var(--radius-sm);color:white;font-weight:700;font-size:0.95rem;cursor:pointer;">Ho capito, chiudi</button>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
   function openAddTradeModal() {
     const data = window.App?.getSelectedData();
     const sym = window.App?.getSelectedSymbol() || '';
@@ -527,6 +570,6 @@ var UI = (() => {
     highlightSelected, updateLivePrice, updateSelectedPrice, updateStockHeader,
     renderSignal, renderIndicatorBadges, renderRiskPanel,
     renderNews, renderJournal, renderJournalSummary, updateJournalLivePrices, showToast, showExitAlert,
-    setLoading, openAddTradeModal, confirmAddTrade, promptCloseEntry,
+    setLoading, openAddTradeModal, confirmAddTrade, promptCloseEntry, openFAQModal,
   };
 })();

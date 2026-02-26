@@ -164,6 +164,45 @@ body {
   animation: pulse 3s ease-in-out infinite;
 }
 
+.btn-faq {
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+}
+
+.btn-faq:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.faq-modal-content {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-glow);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-card);
+}
+
+.faq-modal-title {
+  font-weight: 700;
+  font-size: 1.3rem;
+  margin: 0;
+  color: white;
+}
+
 /* ── Layout ────────────────────────────────────────────── */
 .layout {
   display: grid;
@@ -1137,6 +1176,27 @@ body {
   .demo-badge {
     padding: 4px 8px;
     font-size: 0.65rem;
+  }
+
+  .btn-faq .faq-text {
+    display: none;
+  }
+
+  .btn-faq {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+  }
+
+  .header-meta {
+    gap: 8px;
+  }
+
+  .faq-modal-content {
+    padding: 20px;
+  }
+
+  .faq-modal-title {
+    font-size: 1.1rem;
   }
 
   .signal-grid,
